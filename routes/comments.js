@@ -6,14 +6,23 @@ var router = express.Router({mergeParams: true});
 
 //comments routing
 
-function checkCampgroundOwnership(req, res, next) {
+
+
+function isLoggedIn(req, res, next){
+    if(req.isAuthenticated()){
+        return next();
+    }
+    res.redirect("/login");
+}
+
+function checkCommentOwnership(req, res, next) {
  if(req.isAuthenticated()){
-        Campground.findById(req.params.id, function(err, foundCampground){
+        Comment.findById(req.params.comment_id, function(err, foundComment){
            if(err){
                res.redirect("back");
            }  else {
                // does user own the campground?
-            if(foundCampground.author.id.equals(req.user._id)) {
+            if(foundComment.author.id.equals(req.user._id)) {
                 next();
             } else {
                 res.redirect("back");
@@ -23,13 +32,6 @@ function checkCampgroundOwnership(req, res, next) {
     } else {
         res.redirect("back");
     }
-}
-
-function isLoggedIn(req, res, next){
-    if(req.isAuthenticated()){
-        return next();
-    }
-    res.redirect("/login");
 }
 
 router.get("/new", isLoggedIn, function(req, res) {
@@ -65,6 +67,37 @@ router.post("/", isLoggedIn, function(req, res){
                     campground.save();
                 }
             });
+            res.redirect("/campgrounds/" + req.params.id);
+        }
+    });
+});
+
+router.get("/:comment_id/edit", checkCommentOwnership, function(req, res) {
+    Comment.findById(req.params.comment_id, function(err, foundComment) {
+        if (err) {
+            console.log(err);
+        } else {
+            res.render("comments/edit", {comment : foundComment, campground_id : req.params.id});
+        }
+    })
+});
+
+router.put("/:comment_id",checkCommentOwnership, function(req, res) {
+    Comment.findByIdAndUpdate(req.params.comment_id, req.body.comment, function(err, foundComment) {
+        if (err) {
+            console.log(err);
+        } else {
+            // res.render("comments/edit", {comment : foundComment, campground_id : req.params.id});
+            res.redirect("/campgrounds/" + req.params.id);
+        }
+    })
+});
+
+router.delete("/:comment_id",checkCommentOwnership, function(req, res) {
+    Comment.findByIdAndRemove(req.params.comment_id, function(err) {
+        if (err) {
+            res.redirect("/campgrounds/" + req.params.id);
+        } else {
             res.redirect("/campgrounds/" + req.params.id);
         }
     });
