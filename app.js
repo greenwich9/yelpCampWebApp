@@ -9,6 +9,7 @@ var passport    = require("passport");
 var LocalStrategy = require("passport-local");
 var User = require("./models/user");
 var methodOverride = require("method-override");
+var http = require("http");
 
 
 var commentRoutes    = require("./routes/comments"),
@@ -20,7 +21,7 @@ app.use(bodyParser.urlencoded({extended : true}));
 
 mongoose.connect("mongodb://localhost/campgrounds");
 app.use(express.static(__dirname + "/public"));
-app.use(methodOverride("_method"))
+app.use(methodOverride("_method"));
 // seedDB();
 
 app.set("view engine", "ejs");
@@ -46,6 +47,9 @@ app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/comments", commentRoutes);
 
 
-app.listen(process.env.PORT, process.env.IP, function() {
-    console.log("started");
-});
+// app.listen(process.env.PORT, process.env.IP, function() {
+//     console.log("started");
+// });
+
+var server = http.createServer(app);
+server.listen(80);
